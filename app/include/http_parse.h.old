@@ -1,0 +1,61 @@
+#ifndef __HTTP_PARSE_H__
+#define __HTTP_PARSE_H__
+#include "os_type.h"
+
+#define CR 13
+#define LF 10
+#define u_char unsigned char
+#define ngx_strncmp os_strncmp
+
+enum http_method{
+    NGX_HTTP_GET,
+    NGX_HTTP_POST,
+    NGX_HTTP_HEAD,
+};
+
+typedef struct ngx_http_request
+{
+    char http_major;
+    char http_minor;
+    uint16 http_version;
+    char complex_uri; // 1:带有. %的路径
+    char proxy;
+    enum http_method method;
+    char state;
+    uint16 request_start;
+    uint16 request_end;
+    uint16 method_end;
+    uint16 uri_start;
+    uint16 uri_end;
+    uint16 schema_start;
+    uint16 schema_end;
+    uint16 host_start;
+    uint16 host_end;
+    uint16 port_end;
+    uint16 uri_ext;//拓展名起始位置
+    uint16 args_start;
+    uint16 header_start;
+    uint16 header_end;
+    uint16 header_name_start;
+    uint16 header_name_end;
+
+}ngx_http_request_t;
+
+typedef struct ngx_buf
+{
+    char* pos;
+    char* last;
+}ngx_buf_t;
+
+
+typedef enum ngx_int{
+    NGX_OK,
+    NGX_AGAIN,
+    NGX_HTTP_PARSE_INVALID_METHOD,
+    NGX_HTTP_PARSE_INVALID_REQUEST,
+    NGX_HTTP_PARSE_INVALID_09_METHOD,
+    NGX_HTTP_PARSE_INVALID_HEADER,
+    NGX_HTTP_PARSE_HEADER_DONE
+}ngx_int_t;
+
+#endif

@@ -7,7 +7,8 @@
 #include "user_interface.h"
 
 #include "../include/user_webserver.h"
-// #include "math.h"
+#include "../include/sm_http_parse.h"
+
 
 char* ICACHE_FLASH_ATTR stristr(const char* pString, const char* pFind)
 {
@@ -94,6 +95,32 @@ bool ICACHE_FLASH_ATTR check_data(char *precv, uint16 length)
 //     os_free(req->body);
 //     os_free(req);
 // }
+
+// void ICACHE_FLASH_ATTR sendError(char *msg){
+//     os_printf(msg);
+// }
+
+// void ICACHE_FLASH_ATTR parseRequest(struct http_request *req,char *pdata,uint16 len){
+//     // 1.解析协议及方法路径
+//     // 2.解析头文件
+//     // 3.解析Body
+
+//     char tmp[500];
+//     char *precv,*pnext,*pbody;
+//     int ilen=0;
+
+//     pnext=os_strstr(pdata,"\r\n\r\n");
+//     if(!pnext){
+//         sendError("header end not found");
+//         return;
+//     }
+//     *pnext=0;
+//     *(pnext+1)=0;
+//     pbody=pnext+4;
+
+//     pnext=os_strstr(pdata,"\r\n")
+// }
+
 
 // 解析请求报文
 void ICACHE_FLASH_ATTR decodeRequest(struct http_request *req, char *pdata, uint16 len)
@@ -218,7 +245,8 @@ char* ICACHE_FLASH_ATTR encodeResponse(int code,char *data,int len,int *rawlen){
     raw=os_zalloc(2048);
 
     raw_length=os_sprintf(raw,"HTTP/1.1 %s\r\n",getCode(code));
-    raw_length+=os_sprintf(raw+raw_length,"Content-Type: application/json\r\n");
+    // raw_length+=os_sprintf(raw+raw_length,"Content-Type: application/json\r\n");
+    raw_length+=os_sprintf(raw+raw_length,"Content-Type: text/html\r\n");
     raw_length+=os_sprintf(raw+raw_length,"Content-Length: %d\r\n\r\n",len);
     os_memcpy(raw+raw_length,data,len);
     raw_length+=len;
@@ -227,20 +255,20 @@ char* ICACHE_FLASH_ATTR encodeResponse(int code,char *data,int len,int *rawlen){
 }
 
 
-int putch(int a){
-    os_printf("%c",a);
-    return  a;
-}
-void ICACHE_FLASH_ATTR jsonTest(){
+// int putch(int a){
+//     os_printf("%c",a);
+//     return  a;
+// }
+// void ICACHE_FLASH_ATTR jsonTest(){
      
-    struct jsontree_context json;
-    jsontree_reset(&json);
-    JSONTREE_OBJECT(root,JSONTREE_PAIR("msg","hello"));
-    jsontree_setup(&json,(struct jsontree_context*)&root,NULL);
-    json.putchar=putch;
-    // json.path=1;
-    while (jsontree_print_next(&json) && json.path <= json.depth);
-}
+//     struct jsontree_context json;
+//     jsontree_reset(&json);
+//     JSONTREE_OBJECT(root,JSONTREE_PAIR("msg","hello"));
+//     jsontree_setup(&json,(struct jsontree_context*)&root,NULL);
+//     json.putchar=putch;
+//     // json.path=1;
+//     while (jsontree_print_next(&json) && json.path <= json.depth);
+// }
 
 void ICACHE_FLASH_ATTR onConnected(void *arg)
 {
@@ -257,6 +285,9 @@ void ICACHE_FLASH_ATTR onReconnected(void *arg, sint8 err)
 {
     os_printf("tcp reconnected\n");
 }
+
+// #define RR "<!DOCTYPE html><html><head><title>Light Control</title></head><body><button onclick=\"window.location.href='%s'\">%s</button></body></html>"
+#define RR "<!DOCTYPE html><html><head><title>Light Control</title></head><body><h1>Switch Control</h1><button style=\"font-size: 42px;width:100%;height:300px;\" onclick=\"window.location.href='%s'\">%s</button></body></html>"
 void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
 {
     if (!check_data(pdata, len))
@@ -266,17 +297,39 @@ void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
 
     os_printf("origin recv: %s\n\n", pdata);
 
+    sm_http_request_t *req2;
+    sm_buf_t *buf;
+
+    req2=os_zalloc(sizeof(sm_http_method_t));
+    buf=os_zalloc(sizeof(sm_buf_t));
+
+    buf->pos=pdata;
+    buf->last=pdata+len-1;
+    os_printf("start parse\n");
+    os_printf("rs: %d\n",sm_parse_http(req2,buf));
+
+    os_free(req2);
+    os_free(buf);
+
     struct http_request *req = NULL;
     req=newRequest();
     // req = os_zalloc(sizeof(struct http_request));
     decodeRequest(req, pdata, len);
+
+    // if(os_strncmp(req->url,"/open",5)==0){
+    //     GPIO_OUTPUT_SET(0,1);
+    // }
+
+    // if(os_strncmp(req->url,"/close",6)==0){
+    //     GPIO_OUTPUT_SET(0,0);
+    // }
 
     os_printf("parser data:\nurl: %s\nmethod: %d\ncontent:type: %s\nbody-len: %d\nbody: %s\n\n",
         req->url, req->method, req->content_type, req->body_length, req->body);
 
     freeRequest(req);
 
-
+    
     // struct http_response *response=NULL;
     // response=encodeResponse(200,"{\"msg\":\"hello\"}",14);
 
@@ -287,13 +340,21 @@ void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
     // system_show_malloc();
     os_printf("cpu: %ldMHz mem: %ld\n", system_get_cpu_freq(), system_get_free_heap_size());
     int l=0;
-    char *data;
-    data=encodeResponse(200,"{\"msg\":\"hello\"}",15,&l);
+    char data2[500]={0};
+    char *data=NULL;
+    if(GPIO_INPUT_GET(5)){
+        os_sprintf(data2,RR,"./close","Off");
+    }else{
+        os_sprintf(data2,RR,"./open","On");
+    }
+
+    data=encodeResponse(200,data2,os_strlen(data2),&l);
+    // data=encodeResponse(200,"{\"msg\":\"hello\"}",15,&l);
     os_printf("%s\n",data);
     espconn_send(arg,data,l);
     os_free(data);
 
-    jsonTest();
+    // jsonTest();
     // espconn_send(arg, HTTP_RESPONSE, strlen(HTTP_RESPONSE));
 }
 void ICACHE_FLASH_ATTR onSent(void *arg)

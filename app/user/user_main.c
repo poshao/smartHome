@@ -5,18 +5,25 @@
 #include "user_webserver.h"
 
 #if (SPI_FLASH_SIZE_MAP == 0)
-#define SYSTEM_PARTITION_RF_CAL_ADDR 0x7b000
-#define SYSTEM_PARTITION_PHY_DATA_ADDR 0x7c000
-#define SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR 0x7d000
+    #define SYSTEM_PARTITION_RF_CAL_ADDR 0x7b000
+    #define SYSTEM_PARTITION_PHY_DATA_ADDR 0x7c000
+    #define SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR 0x7d000
 
-#define IROM0TEXT_BIN_LEN 0x5c000
+    #define IROM0TEXT_BIN_LEN 0x5c000
+
+#elif (SPI_FLASH_SIZE_MAP == 2)
+    #define SYSTEM_PARTITION_RF_CAL_ADDR 0xfb000
+    #define SYSTEM_PARTITION_PHY_DATA_ADDR 0xfc000
+    #define SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR 0xfd000
+
+    #define IROM0TEXT_BIN_LEN 0xbc000
 
 #elif (SPI_FLASH_SIZE_MAP == 6)
-#define SYSTEM_PARTITION_RF_CAL_ADDR 0x3fb000
-#define SYSTEM_PARTITION_PHY_DATA_ADDR 0x3fc000
-#define SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR 0x3fd000
+    #define SYSTEM_PARTITION_RF_CAL_ADDR 0x3fb000
+    #define SYSTEM_PARTITION_PHY_DATA_ADDR 0x3fc000
+    #define SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR 0x3fd000
 
-#define IROM0TEXT_BIN_LEN 0xc0000
+    #define IROM0TEXT_BIN_LEN 0xc0000
 #endif
 
 #define CheckError(s) \
@@ -120,14 +127,39 @@ void ICACHE_FLASH_ATTR initClient(void){
 
 }
 
+static int light_state=0;
+void ICACHE_FLASH_ATTR onTimer(void *arg){
+    os_printf("light:%d\n",light_state);
+    GPIO_OUTPUT_SET(5,light_state);
+    light_state=~light_state;
+}
+
+// flash light
+void ICACHE_FLASH_ATTR initLight(){
+    os_timer_t timer;
+
+    PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO5_U);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U,FUNC_GPIO5);
+
+
+    os_timer_disarm(&timer);
+    os_timer_setfn(&timer,onTimer,NULL);
+    os_timer_arm(&timer,100,TRUE);
+}
+
 // 初始化完成后的回调
 void ICACHE_FLASH_ATTR on_init_done(void)
 {
     os_printf("init finished!\r\n");
+    // PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO0_U);
+    // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
+    // PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO5_U);
+    // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U,FUNC_GPIO5);
 
     // initClient();
     init_softap();
     startServer();
+    // initLight();
 }
 
 // 启动函数

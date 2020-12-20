@@ -6,15 +6,20 @@ enum http_method
     METHOD_POST
 };
 
-struct http_request
+struct http_header{
+    char *name;
+    char *value;
+};
+
+typedef struct http_request
 {
-    char *url;
     enum http_method method;
+    char *url;
+    struct  http_header **headers;
     char *content_type;
     char *body;
     uint16 body_length;
-};
-
+}http_request_t;
 
 struct  http_response
 {
