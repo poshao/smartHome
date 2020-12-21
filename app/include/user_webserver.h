@@ -1,25 +1,6 @@
 #ifndef __USER_WEBSERVER_H__
 #define __USER_WEBSERVER_H__
-enum http_method
-{
-    METHOD_GET = 1,
-    METHOD_POST
-};
-
-struct http_header{
-    char *name;
-    char *value;
-};
-
-typedef struct http_request
-{
-    enum http_method method;
-    char *url;
-    struct  http_header **headers;
-    char *content_type;
-    char *body;
-    uint16 body_length;
-}http_request_t;
+#include "os_type.h"
 
 struct  http_response
 {

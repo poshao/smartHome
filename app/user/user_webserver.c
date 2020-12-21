@@ -6,9 +6,10 @@
 #include "json/jsontree.h"
 #include "user_interface.h"
 
-#include "../include/user_webserver.h"
-#include "../include/sm_http_parse.h"
+#include "user_webserver.h"
 
+#include "sm_http_parse.h"
+#include "sm_debug.h"
 
 char* ICACHE_FLASH_ATTR stristr(const char* pString, const char* pFind)
 {
@@ -83,8 +84,8 @@ bool ICACHE_FLASH_ATTR check_data(char *precv, uint16 length)
     return true;
 }
 
-#define newRequest() os_zalloc(sizeof(struct http_request))
-#define freeRequest(s) os_free(s->url);os_free(s->content_type);os_free(s->body);os_free(s);s=NULL;
+// #define newRequest() os_zalloc(sizeof(struct http_request))
+// #define freeRequest(s) os_free(s->url);os_free(s->content_type);os_free(s->body);os_free(s);s=NULL;
 
 // struct http_request* ICACHE_FLASH_ATTR newRequest(){
 //     return os_zalloc(sizeof(struct http_request));
@@ -123,87 +124,87 @@ bool ICACHE_FLASH_ATTR check_data(char *precv, uint16 length)
 
 
 // 解析请求报文
-void ICACHE_FLASH_ATTR decodeRequest(struct http_request *req, char *pdata, uint16 len)
-{
-    /*
-    POST / HTTP/1.1
-    Content-Type:application/json
-    Content-Length:22
+// void ICACHE_FLASH_ATTR decodeRequest(struct http_request *req, char *pdata, uint16 len)
+// {
+//     /*
+//     POST / HTTP/1.1
+//     Content-Type:application/json
+//     Content-Length:22
 
-    {code:200,msg:'hello'}
-    */
-    char *precv = pdata;
-    char *ptmp = NULL;
-    char *ptmp2=NULL;
+//     {code:200,msg:'hello'}
+//     */
+//     char *precv = pdata;
+//     char *ptmp = NULL;
+//     char *ptmp2=NULL;
 
-    if (os_strncmp(precv, "GET", 3) == 0)
-    {
-        req->method = METHOD_GET;
-        precv += 4;
-    }
-    else if (os_strncmp(precv, "POST", 4) == 0)
-    {
-        req->method = METHOD_POST;
-        precv += 5;
-    }
-    else
-    {
-        os_printf("bad request\n");
-        return;
-    }
+//     if (os_strncmp(precv, "GET", 3) == 0)
+//     {
+//         req->method = METHOD_GET;
+//         precv += 4;
+//     }
+//     else if (os_strncmp(precv, "POST", 4) == 0)
+//     {
+//         req->method = METHOD_POST;
+//         precv += 5;
+//     }
+//     else
+//     {
+//         os_printf("bad request\n");
+//         return;
+//     }
 
-    ptmp = os_strstr(precv, " HTTP");
-    if (ptmp == NULL)
-    {
-        os_printf("bad request\n");
-        return;
-    }
+//     ptmp = os_strstr(precv, " HTTP");
+//     if (ptmp == NULL)
+//     {
+//         os_printf("bad request\n");
+//         return;
+//     }
 
-    // path
-    req->url = os_zalloc(ptmp - precv + 1);
-    os_strncpy(req->url, precv, ptmp - precv);
-    precv = ptmp + 7;
+//     // path
+//     req->url = os_zalloc(ptmp - precv + 1);
+//     os_strncpy(req->url, precv, ptmp - precv);
+//     precv = ptmp + 7;
 
-    if (req->method == METHOD_GET)
-        return;
+//     if (req->method == METHOD_GET)
+//         return;
 
-    // length
-    ptmp = os_stristr(precv, "Content-Length: ");
-    if (ptmp != NULL)
-    {
-        ptmp2 = ptmp + 16;
-        ptmp = os_strstr(ptmp2, "\r\n");
-        if (ptmp == NULL)
-        {
-            os_printf("bad request\n");
-            return;
-        }
+//     // length
+//     ptmp = os_stristr(precv, "Content-Length: ");
+//     if (ptmp != NULL)
+//     {
+//         ptmp2 = ptmp + 16;
+//         ptmp = os_strstr(ptmp2, "\r\n");
+//         if (ptmp == NULL)
+//         {
+//             os_printf("bad request\n");
+//             return;
+//         }
 
-        char *plen = os_zalloc(ptmp - ptmp2 + 1);
-        os_memcpy(plen, ptmp2, ptmp - ptmp2);
-        req->body_length = atoi(plen);
-        os_free(plen);
-        plen = NULL;
+//         char *plen = os_zalloc(ptmp - ptmp2 + 1);
+//         os_memcpy(plen, ptmp2, ptmp - ptmp2);
+//         req->body_length = atoi(plen);
+//         os_free(plen);
+//         plen = NULL;
 
 
-        ptmp=os_strstr(precv,"Content-Type: ");
-        if(ptmp!=NULL){
-            ptmp+=14;
-            ptmp2=os_strstr(ptmp,"\r\n");
-            req->content_type=os_zalloc(ptmp2-ptmp+1);
-            os_memcpy(req->content_type,ptmp,ptmp2-ptmp);
-        }
+//         ptmp=os_strstr(precv,"Content-Type: ");
+//         if(ptmp!=NULL){
+//             ptmp+=14;
+//             ptmp2=os_strstr(ptmp,"\r\n");
+//             req->content_type=os_zalloc(ptmp2-ptmp+1);
+//             os_memcpy(req->content_type,ptmp,ptmp2-ptmp);
+//         }
 
-        ptmp = os_strstr(ptmp, "\r\n\r\n");
-        if (ptmp == NULL)
-        {
-            os_printf("bad request\n");
-        }
+//         ptmp = os_strstr(ptmp, "\r\n\r\n");
+//         if (ptmp == NULL)
+//         {
+//             os_printf("bad request\n");
+//         }
 
-        req->body = (char *)os_zalloc(req->body_length + 1);
-        os_memcpy(req->body, ptmp + 4, req->body_length);
-    }
-}
+//         req->body = (char *)os_zalloc(req->body_length + 1);
+//         os_memcpy(req->body, ptmp + 4, req->body_length);
+//     }
+// }
 
 #define newResponse() os_zalloc(sizeof(struct http_response))
 #define freeResponse(s) os_free(s->code);os_free(s->content_type);os_free(s->content);os_free(s);s=NULL;
@@ -218,41 +219,41 @@ void ICACHE_FLASH_ATTR decodeRequest(struct http_request *req, char *pdata, uint
 //     os_free(response);
 // }
 
-char* ICACHE_FLASH_ATTR getCode(int code){
-    switch (code)
-    {
-    case 200:
-        return "200 OK";
-    case 400:
-        return "400 Invalid Request";
-    default:
-        return "500 Internal Server Error";
-    }
-}
+// char* ICACHE_FLASH_ATTR getCode(int code){
+//     switch (code)
+//     {
+//     case 200:
+//         return "200 OK";
+//     case 400:
+//         return "400 Invalid Request";
+//     default:
+//         return "500 Internal Server Error";
+//     }
+// }
 
-// 生成响应报文
-char* ICACHE_FLASH_ATTR encodeResponse(int code,char *data,int len,int *rawlen){
-    /*
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 15
+// // 生成响应报文
+// char* ICACHE_FLASH_ATTR encodeResponse(int code,char *data,int len,int *rawlen){
+//     /*
+//     HTTP/1.1 200 OK
+//     Content-Type: application/json
+//     Content-Length: 15
 
-    {"msg":"hello"}
-    */
+//     {"msg":"hello"}
+//     */
 
-    char *raw=NULL;
-    int raw_length=0;
-    raw=os_zalloc(2048);
+//     char *raw=NULL;
+//     int raw_length=0;
+//     raw=os_zalloc(2048);
 
-    raw_length=os_sprintf(raw,"HTTP/1.1 %s\r\n",getCode(code));
-    // raw_length+=os_sprintf(raw+raw_length,"Content-Type: application/json\r\n");
-    raw_length+=os_sprintf(raw+raw_length,"Content-Type: text/html\r\n");
-    raw_length+=os_sprintf(raw+raw_length,"Content-Length: %d\r\n\r\n",len);
-    os_memcpy(raw+raw_length,data,len);
-    raw_length+=len;
-    *rawlen=raw_length;
-    return raw;
-}
+//     raw_length=os_sprintf(raw,"HTTP/1.1 %s\r\n",getCode(code));
+//     // raw_length+=os_sprintf(raw+raw_length,"Content-Type: application/json\r\n");
+//     raw_length+=os_sprintf(raw+raw_length,"Content-Type: text/html\r\n");
+//     raw_length+=os_sprintf(raw+raw_length,"Content-Length: %d\r\n\r\n",len);
+//     os_memcpy(raw+raw_length,data,len);
+//     raw_length+=len;
+//     *rawlen=raw_length;
+//     return raw;
+// }
 
 
 // int putch(int a){
@@ -297,62 +298,39 @@ void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
 
     os_printf("origin recv: %s\n\n", pdata);
 
-    sm_http_request_t *req2;
+    sm_http_request_t *r;
     sm_buf_t *buf;
+    sm_return_t rs;
 
-    req2=os_zalloc(sizeof(sm_http_method_t));
-    buf=os_zalloc(sizeof(sm_buf_t));
-
-    buf->pos=pdata;
-    buf->last=pdata+len-1;
-    os_printf("start parse\n");
-    os_printf("rs: %d\n",sm_parse_http(req2,buf));
-
-    os_free(req2);
-    os_free(buf);
-
-    struct http_request *req = NULL;
-    req=newRequest();
-    // req = os_zalloc(sizeof(struct http_request));
-    decodeRequest(req, pdata, len);
-
-    // if(os_strncmp(req->url,"/open",5)==0){
-    //     GPIO_OUTPUT_SET(0,1);
-    // }
-
-    // if(os_strncmp(req->url,"/close",6)==0){
-    //     GPIO_OUTPUT_SET(0,0);
-    // }
-
-    os_printf("parser data:\nurl: %s\nmethod: %d\ncontent:type: %s\nbody-len: %d\nbody: %s\n\n",
-        req->url, req->method, req->content_type, req->body_length, req->body);
-
-    freeRequest(req);
-
+    buf=sm_init_buf(pdata,len);
+    r=sm_init_http_request();
+    rs=sm_parse_http_request(r,buf);
     
-    // struct http_response *response=NULL;
-    // response=encodeResponse(200,"{\"msg\":\"hello\"}",14);
+    os_printf("parse result: %d\n",(int)rs);
+    sm_dump_http_request(r);
+    
+    os_printf("Host: [%s]\n",sm_http_header_get_value(&r->headers,"Host"));
+    sm_free_http_request(r);
+    sm_free_buf(buf);
+    
+    sm_dump_system_state();
 
-    // os_free(req->url);
-    // os_free(req->body);
-    // os_free(req);
+    // response
+    sm_http_response_t *rsp;
+    char aa[2000]={0};
+    buf=sm_init_buf(aa,2000);
+    rsp=sm_init_http_response();
+    rsp->body=os_zalloc(20);
+    os_strcpy(rsp->body,"hello world!");
+    rsp->bodylen=os_strlen(rsp->body);
+    
+    sm_build_http_response(rsp,buf);
+    espconn_send(arg,aa,buf->last-buf->pos);
+    os_printf("build: %s\n\n",buf->pos);
+    sm_free_buf(buf);
 
-    // system_show_malloc();
-    os_printf("cpu: %ldMHz mem: %ld\n", system_get_cpu_freq(), system_get_free_heap_size());
-    int l=0;
-    char data2[500]={0};
-    char *data=NULL;
-    if(GPIO_INPUT_GET(5)){
-        os_sprintf(data2,RR,"./close","Off");
-    }else{
-        os_sprintf(data2,RR,"./open","On");
-    }
-
-    data=encodeResponse(200,data2,os_strlen(data2),&l);
-    // data=encodeResponse(200,"{\"msg\":\"hello\"}",15,&l);
-    os_printf("%s\n",data);
-    espconn_send(arg,data,l);
-    os_free(data);
+    sm_free_http_response(rsp);
+    sm_dump_system_state();
 
     // jsonTest();
     // espconn_send(arg, HTTP_RESPONSE, strlen(HTTP_RESPONSE));
