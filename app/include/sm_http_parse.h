@@ -4,6 +4,18 @@
 #include "mem.h"
 #include "user_interface.h"
 
+typedef struct sm_http_header{
+    char *name;
+    char *value;
+
+    sm_http_header_t *next;
+}sm_http_header_t;
+
+typedef struct sm_http_headers{
+    sm_http_header_t *header;
+    sm_http_header_t *footer;
+}sm_http_headers_t;
+
 typedef enum sm_http_method{
     SM_HTTP_GET,
     SM_HTTP_POST
@@ -13,7 +25,7 @@ typedef struct sm_http_request
 {
     sm_http_method_t method;
     char *url;
-    char **headers;
+    sm_http_headers_t headers;
     char *body;
     uint16 bodylen;
     uint16 state;

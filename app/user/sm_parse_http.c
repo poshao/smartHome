@@ -1,5 +1,82 @@
 #include "sm_http_parse.h"
 
+sm_http_header_t *sm_init_http_header(char *name, char *value)
+{
+    sm_http_header_t *header;
+    header = os_zalloc(sizeof(sm_http_header_t));
+    header->name = os_zalloc(os_strlen(name) + 1);
+    os_strcpy(header->name, name);
+    header->value = os_zalloc(os_strlen(value) + 1);
+    os_strcpy(header->value, value);
+    return header;
+}
+
+void sm_free_http_header(sm_http_header_t *header)
+{
+    if (!header)
+    {
+        return;
+    }
+    if (header->name)
+    {
+        os_free(header->name);
+    }
+    if (header->value)
+    {
+        os_free(header->value);
+    }
+    os_free(header);
+    header = NULL;
+}
+
+void sm_http_headers_add(sm_http_headers_t *headers, sm_http_header_t *header)
+{
+    if (!headers)
+        return;
+    if (!header)
+        return;
+    if (!headers->header)
+    {
+        headers->header = header;
+        headers->footer = header;
+    }
+    else
+    {
+        headers->footer->next = header;
+        headers->footer = header;
+    }
+}
+
+sm_http_header_t *sm_http_header_get(sm_http_headers_t *headers, char *name)
+{
+    sm_http_header_t *header;
+    header = headers->header;
+    while (header)
+    {
+        if (os_strcmp(header->name, name) == 0)
+        {
+            return header;
+        }
+        header = header->next;
+    }
+    return NULL;
+}
+
+void sm_free_http_headers(sm_http_headers_t *headers)
+{
+    sm_http_header_t *header, *next;
+    header = headers->header;
+    while (header)
+    {
+        next = header->next;
+        sm_free_http_header(header);
+        header = next;
+    }
+    headers->header = headers->footer = NULL;
+    // os_free(headers);
+    // headers=NULL;
+}
+
 sm_return_t sm_parse_http(sm_http_request_t *r, sm_buf_t *b)
 {
     /*
@@ -115,11 +192,11 @@ sm_return_t sm_parse_http(sm_http_request_t *r, sm_buf_t *b)
             }
             break;
         case state_body_start:
-            r->body=p;
-            r->bodylen+=b->last-p+1;
+            r->body = p;
+            r->bodylen += b->last - p + 1;
             os_memset(t, 0, 100);
-            os_memcpy(t, p, b->last-p+1);
-            os_printf("body: %s :%d\n", t,b->last-p+1);
+            os_memcpy(t, p, b->last - p + 1);
+            os_printf("body: %s :%d\n", t, b->last - p + 1);
             return SM_OK;
         default:
             break;
