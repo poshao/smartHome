@@ -321,6 +321,25 @@ void sm_dump_http_request(sm_http_request_t *r)
     os_printf("=== dump http_request end   ===\n\n");
 }
 
+void sm_http_content_type_set(sm_http_response_t *r,sm_content_type_t tp){
+    if(!r) return;
+
+    char content_type[50]={0};
+    switch (tp)
+    {
+    case SM_CONTENT_TYPE_HTML:
+        os_strcpy(content_type,"text/html");
+        break;
+    case SM_CONTENT_TYPE_JSON:
+        os_strcpy(content_type,"application/json");
+        break;
+    default:
+        os_strcpy(content_type,"text/plain");
+        break;
+    }
+    sm_http_header_set(&r->headers,"Content-Type",content_type);
+}
+
 sm_http_response_t *sm_init_http_response()
 {
     sm_http_response_t *r;
@@ -377,11 +396,11 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
 
     sm_http_header_t *header;
 
-    if (r->bodylen > 0)
-    {
+    // if (r->bodylen > 0)
+    // {
         os_sprintf(line, "%d", r->bodylen);
         sm_http_header_set(&r->headers, "Content-Length", line);
-    }
+    // }
 
     p = buf->pos;
     len = os_sprintf(line, "HTTP/1.1 %d %s\r\n", r->code, sm_get_code_description(r->code));
@@ -392,10 +411,9 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
     }
     else
     {
-        return SM_MEM_LIMIT;
+        return SM_NO_MEM;
     }
 
-    // os_printf("HTTP/1.1 %d %s\r\n",r->code,"OK");
     header = r->headers.header;
     while (header)
     {
@@ -407,7 +425,7 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
         }
         else
         {
-            return SM_MEM_LIMIT;
+            return SM_NO_MEM;
         }
         // p+=len;
         // os_printf("%s: %s\r\n",header->name,header->value);
@@ -421,7 +439,7 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
     }
     else
     {
-        return SM_MEM_LIMIT;
+        return SM_NO_MEM;
     }
     // p += len;
 
@@ -436,7 +454,7 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
     }
     else
     {
-        return SM_MEM_LIMIT;
+        return SM_NO_MEM;
     }
     buf->last=p;
     return SM_OK;

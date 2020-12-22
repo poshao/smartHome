@@ -47,7 +47,7 @@ typedef enum sm_return
 {
     SM_OK,
     SM_INVALID_REQUEST_METHOD,
-    SM_MEM_LIMIT
+    SM_NO_MEM
 } sm_return_t;
 
 // functions
@@ -57,10 +57,16 @@ sm_buf_t *sm_init_buf(char *pdata, int len);
 void sm_free_buf(sm_buf_t *buf);
 sm_return_t sm_parse_http_request(sm_http_request_t *r, sm_buf_t *b);
 
+void sm_http_header_set(sm_http_headers_t *headers, char *name, char *value);
 sm_http_header_t *sm_http_header_get(sm_http_headers_t *headers, char *name);
 char *sm_http_header_get_value(sm_http_headers_t *headers, char *name);
 
 void sm_dump_http_request(sm_http_request_t *r);
+
+typedef enum sm_content_type{
+    SM_CONTENT_TYPE_HTML,
+    SM_CONTENT_TYPE_JSON
+}sm_content_type_t;
 
 typedef struct sm_http_response
 {
@@ -70,6 +76,7 @@ typedef struct sm_http_response
     int bodylen;
 }sm_http_response_t;
 
+void sm_http_content_type_set(sm_http_response_t *r,sm_content_type_t tp);
 sm_http_response_t *sm_init_http_response();
 void sm_free_http_response(sm_http_response_t *r);
 sm_return_t sm_build_http_response(sm_http_response_t *r,sm_buf_t *buf);
