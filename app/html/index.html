@@ -1,11 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="./milligram.min.css"/> -->
+    <link rel="stylesheet" href="./pure-min.css" />
     <title>SmartControl</title>
-    <script src="./main.js"></script>
+    <style>
+    </style>
 </head>
+
 <body>
+    <header class="pure-menu pure-menu-horizontal">
+        <a href="#" class="pure-menu-heading pure-menu-link">LOGO</a>
+        <ul class="pure-menu-list">
+            <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+                <a href="#" class="pure-menu-link">System</a>
+                <ul class="pure-menu-children">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Summary</a></li>
+                    <!-- <li class="pure-menu-item"><a href="#" class="pure-menu-link">SNTP</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Name</a></li> -->
+                </ul>
+            </li>
+
+            <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+                <a href="#" class="pure-menu-link">Function</a>
+                <ul class="pure-menu-children">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Remote IO</a></li>
+                </ul>
+            </li>
+
+            <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+                <a href="#" class="pure-menu-link">Device</a>
+                <ul class="pure-menu-children">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Wifi</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">IO</a></li>
+                </ul>
+            </li>
+
+            <!-- <li class="pure-menu-item pure-menu-selected"><a href="#" class="pure-menu-link">Home</a></li>
+            <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+                <a href="#" id="menuLink1" class="pure-menu-link">Contact</a>
+                <ul class="pure-menu-children">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Email</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Twitter</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Tumblr Blog</a></li>
+                </ul>
+            </li> -->
+        </ul>
+    </header>
+    <div class="pure-g">
+        <div class="pure-u-1">
+            <form id="sntp" class="pure-form pure-form-aligned">
+                <fieldset>
+                    <h1 style="text-align: center;">SNTP Setting</h1>
+                    <div class="pure-control-group">
+                        <label for="time">Time</label>
+                        <input id="time" type="text" value="2020/12/24 23:37:16" readonly> <button class="pure-button">sync</button>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="sntp1">SNTP1</label>
+                        <input id="sntp1" type="text">
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="sntp2">SNTP2</label>
+                        <input id="sntp2" type="text">
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="sntp3">SNTP3</label>
+                        <input id="sntp3" type="text">
+                    </div>
+                    <div class="pure-controls">
+                        <button type="submit" class="pure-button pure-button-primary">Save</button>
+                        <button class="pure-button">cancel</button>
+                    </div>
+                </fieldset>
+            </form>
+
+            <form class="pure-form pure-form-aligned">
+                <h1 style="text-align: center;">Wifi Setting</h1>
+                <fieldset>
+                    <div class="pure-control-group">
+                        <label for="mode">Mode</label>
+                        <select id="mode" class="pure-input">
+                            <option value="sta">Client</option>
+                            <option value="ap">AP</option>
+                            <option value="staap">Client+AP</option>
+                        </select>
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="ssid">SSID</label>
+                        <input id="ssid" type="text"> <button class="pure-button">scan</button>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="password">Password</label>
+                        <input id="password" type="password">
+                    </div>
+
+                    <div class="pure-controls">
+                        <button type="submit" class="pure-button pure-button-primary">Save</button>
+                        <button class="pure-button">cancel</button>
+                    </div>
+                </fieldset>
+            </form>
+
+            <form class="pure-form pure-form-aligned">
+                <h1 style="text-align: center;">Remote IO</h1>
+                <fieldset>
+
+                    <div class="pure-control-group">
+                        <label for="io_state">State</label>
+                        <input id="io_state" type="text" value="OFF" readonly>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="io">IO</label>
+                        <select id="io" class="pure-input">
+                            <option>GPIO0</option>
+                            <option>GPIO2</option>
+                            <option>GPIO5</option>
+                        </select>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="close_delay">Close Delay</label>
+                        <input id="close_delay" type="text" placeholder="autoclose after n seconds; 0 is disable">
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="io_control">Control</label>
+                        <button class="pure-button">On</button> <button class="pure-button">Off</button>
+                    </div>
+                    <div class="pure-controls">
+                        <button type="submit" class="pure-button pure-button-primary">Save</button>
+                        <button class="pure-button">cancel</button>
+                    </div>
+
+
+                    <!-- <div class="pure-controls">
+                        <label for="cb" class="pure-checkbox">
+                            <input id="cb" type="checkbox"> I've read the terms and conditions
+                        </label>
+
+                        <label for="cb" class="pure-radio">
+                            <input id="cb" type="radio"> I've read the terms and conditions
+                        </label>
+
+                        <button type="submit" class="pure-button pure-button-primary">Submit</button>
+                    </div> -->
+            </form>
+            </fieldset>
+        </div>
+    </div>
+    <footer>footer</footer>
 </body>
+
 </html>
