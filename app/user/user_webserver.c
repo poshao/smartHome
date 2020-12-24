@@ -6,6 +6,7 @@
 // #include "json/jsontree.h"
 #include "user_interface.h"
 #include "spi_flash.h"
+#include "sntp.h"
 
 #include "user_webserver.h"
 
@@ -114,10 +115,25 @@ void send_error(void *arg,int code,char *msg){
     // sm_dump_system_state();
 }
 
+/**
+ * /index.html 未验证login.html 否则main.html
+ * /main.css 样式表
+ * /main.js 脚本
+ * 
+ * /wifi?info 获取wifi相关信息
+ * /io?info 获取io相关信息
+ * /sntp?info 获取sntp相关信息
+ * /usart?info 获取usart相关信息
+ * /help 打印帮助信息
+ * /version 打印版本信息
+ */ 
+
 void on_request(void *arg,sm_http_request_t *req){
     if(req->method==SM_HTTP_GET){
         if(os_strcmp(req->url,"/index.html")==0){
             send_error(arg,200,"okay");
+        }else if(os_strcmp(req->url,"/now")==0){
+            send_error(arg,200,sntp_get_real_time(sntp_get_current_timestamp()));
         }else{
             send_error(arg,404,NULL);
         }
@@ -142,6 +158,10 @@ void ICACHE_FLASH_ATTR onReconnected(void *arg, sint8 err)
 
 void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
 {
+    uint32 current_timestamp;
+    current_timestamp=sntp_get_current_timestamp();
+    os_printf("time: %ld %s\n",current_timestamp,sntp_get_real_time(current_timestamp));
+
     if (!check_data(pdata, len))
     {
         os_printf("invalid request");

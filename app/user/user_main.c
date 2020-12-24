@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "user_interface.h"
 #include "user_webserver.h"
+#include "sntp.h"
 
 #if (SPI_FLASH_SIZE_MAP == 0)
     #define SYSTEM_PARTITION_RF_CAL_ADDR 0x7b000
@@ -120,8 +121,9 @@ void ICACHE_FLASH_ATTR initClient(void){
     struct station_config *config=NULL;
     wifi_set_opmode(STATIONAP_MODE);
     config=(struct station_config*)os_zalloc(sizeof(struct station_config));
-    strcpy(config->ssid,"Snoopy");
-    strcpy(config->password,"helloboy");
+    strcpy(config->ssid,"Speed_WIFI");
+    // strcpy(config->ssid,"Snoopy");
+    // strcpy(config->password,"helloboy");
     wifi_station_set_config_current(config);
     wifi_station_connect();
 
@@ -156,7 +158,7 @@ void ICACHE_FLASH_ATTR on_init_done(void)
     // PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO5_U);
     // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U,FUNC_GPIO5);
 
-    // initClient();
+    initClient();
     init_softap();
     startServer();
     // initLight();
@@ -176,5 +178,17 @@ void ICACHE_FLASH_ATTR user_init(void)
               " "__TIME__
               "\n");
 #endif
+
+    // 设置mac v10
+    char client_mac[6]={0xDC,0x72,0x9B,0xA3,0x84,0x3B};
+    wifi_set_macaddr(STATION_IF,client_mac);
+
+    // init SNTP
+    sntp_setservername(0,"us.pool.ntp.org");
+    sntp_setservername(1,"ntp.sjtu.edu.cn"); 
+    sntp_init();
+
+
+
     system_init_done_cb(on_init_done);
 }

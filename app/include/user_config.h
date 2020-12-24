@@ -13,4 +13,14 @@
 // #define CONFIG_AT_WPA2_ENTERPRISE_COMMAND_ENABLE
 
 // #define CONFIG_ENABLE_IRAM_MEMORY       1
+
+typedef struct user_config
+{
+    // sntp
+    char sntp1[20];
+    char sntp2[20];
+    char sntp3[20];
+    
+}user_config_t;
+
 #endif

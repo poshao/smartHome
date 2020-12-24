@@ -333,6 +333,15 @@ void sm_http_content_type_set(sm_http_response_t *r,sm_content_type_t tp){
     case SM_CONTENT_TYPE_JSON:
         os_strcpy(content_type,"application/json");
         break;
+    case SM_CONTENT_TYPE_JAVASCRIPT:
+        os_strcpy(content_type,"text/javascript");
+        break;
+    case SM_CONTENT_TYPE_CSS:
+        os_strcpy(content_type,"text/css");
+        break;
+    case SM_CONTENT_TYPE_X_FORM:
+        os_strcpy(content_type,"application/x-www-form-unlencoded");
+        break;
     default:
         os_strcpy(content_type,"text/plain");
         break;

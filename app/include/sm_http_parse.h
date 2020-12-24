@@ -65,7 +65,10 @@ void sm_dump_http_request(sm_http_request_t *r);
 
 typedef enum sm_content_type{
     SM_CONTENT_TYPE_HTML,
-    SM_CONTENT_TYPE_JSON
+    SM_CONTENT_TYPE_JSON,
+    SM_CONTENT_TYPE_X_FORM,
+    SM_CONTENT_TYPE_JAVASCRIPT,
+    SM_CONTENT_TYPE_CSS
 }sm_content_type_t;
 
 typedef struct sm_http_response
