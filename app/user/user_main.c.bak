@@ -5,7 +5,6 @@
 #include "user_webserver.h"
 #include "spi_flash.h"
 #include "sntp.h"
-#include "light_control.h"
 
 #define AP_CLOSE_TIME 20
 
@@ -109,13 +108,84 @@ void onCloseAP(void *arg){
     }
 }
 
+// // 设置热点
+// void ICACHE_FLASH_ATTR init_softap(void)
+// {
+//     struct softap_config *config = NULL;
+
+//     // if (wifi_get_opmode() != SOFTAP_MODE)
+//     // {
+//     //     CheckError(wifi_set_opmode(SOFTAP_MODE));
+//     // }
+
+//     config = (struct softap_config *)os_zalloc(sizeof(struct softap_config));
+//     strcpy(config->ssid, "Snoopy2");
+//     // os_memcpy(config->ssid,"Snoopy",7);
+//     config->ssid_len = strlen(config->ssid);
+//     strcpy(config->password, "12345678");
+//     config->channel = 11;
+//     config->max_connection = 4;
+//     config->ssid_hidden = 0;
+//     config->authmode = AUTH_WPA2_PSK;
+//     config->beacon_interval = 100;
+
+//     CheckError(wifi_softap_set_config_current(config));
+
+//     os_free(config);
+//     os_printf("init softAP(Snoopy:12345678)... OK!\r\n");
+
+//     wifi_set_event_handler_cb(on_wifi_event);
+
+//     // 设置定时器 30秒后自动关闭
+//     apCloseTime=30;
+//     os_timer_disarm(&timerApClose);
+//     os_timer_setfn(&timerApClose,onCloseAP,NULL);
+//     os_timer_arm(&timerApClose,1000,TRUE);
+// }
+
+// void ICACHE_FLASH_ATTR initClient(void){
+//     struct station_config *config=NULL;
+//     wifi_set_opmode(STATIONAP_MODE);
+//     config=(struct station_config*)os_zalloc(sizeof(struct station_config));
+//     //strcpy(config->ssid,"Speed_WIFI");
+//     strcpy(config->ssid,"Snoopy");
+//     strcpy(config->password,"helloboy");
+//     wifi_station_set_config_current(config);
+//     wifi_station_connect();
+// }
+
+// static int light_state=0;
+// void ICACHE_FLASH_ATTR onTimer(void *arg){
+//     os_printf("light:%d\n",light_state);
+//     GPIO_OUTPUT_SET(5,light_state);
+//     light_state=~light_state;
+// }
+
+// // flash light
+// void ICACHE_FLASH_ATTR initLight(){
+//     os_timer_t timer;
+
+//     PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO5_U);
+//     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U,FUNC_GPIO5);
+
+//     os_timer_disarm(&timer);
+//     os_timer_setfn(&timer,onTimer,NULL);
+//     os_timer_arm(&timer,100,TRUE);
+// }
+
 // 初始化完成后的回调
 void ICACHE_FLASH_ATTR on_init_done(void)
 {
     os_printf("init finished!\r\n");
+    // PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO0_U);
+    // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
+    // PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO5_U);
+    // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U,FUNC_GPIO5);
 
     char temp[20];
     uint32 chipid;
+
+    system_restore();
 
     chipid=system_get_chip_id();
     // 配置热点信息
@@ -126,15 +196,6 @@ void ICACHE_FLASH_ATTR on_init_done(void)
         // 初始化设定
         os_printf("reset config...\n");
 
-        // 需在保存station配置之前配置成包含StationMode的模式
-        wifi_set_opmode(STATIONAP_MODE);
-
-        wifi_station_get_config_default(&sta_config);
-        strcpy(sta_config.ssid,"Snoopy");
-        strcpy(sta_config.password,"helloboy");
-        sta_config.all_channel_scan=TRUE;
-        os_printf("station save: %d\n",wifi_station_set_config(&sta_config));
-
         wifi_softap_get_config_default(&ap_config);
         os_sprintf(temp,"SWAP%02X",chipid);
         strcpy(ap_config.ssid,temp);
@@ -142,9 +203,17 @@ void ICACHE_FLASH_ATTR on_init_done(void)
         ap_config.authmode=AUTH_WPA2_PSK;
         ap_config.max_connection=4;
         wifi_softap_set_config(&ap_config);
-    }
 
-    wifi_station_connect();
+        wifi_station_get_config_default(&sta_config);
+        strcpy(sta_config.ssid,"Speed_WIFI");
+        sta_config.all_channel_scan=TRUE;
+        
+        // strcpy(sta_config.password,"helloboy");
+        CheckError(wifi_station_set_config(&sta_config));
+        wifi_station_connect();
+
+        wifi_set_opmode(STATIONAP_MODE);
+    }
 
     os_sprintf(temp,"SWSTA%02X",chipid);
     wifi_station_set_hostname(temp);
@@ -157,11 +226,14 @@ void ICACHE_FLASH_ATTR on_init_done(void)
 
     wifi_set_event_handler_cb(on_wifi_event);
 
-    // 初始化IO
-    light_init();
-
     // 启动服务
     startServer();
+    // initClient();
+
+    // 开启热点,30秒无请求时自动关闭
+    // init_softap();
+    // startServer();
+    // initLight();
 }
 
 // 启动函数

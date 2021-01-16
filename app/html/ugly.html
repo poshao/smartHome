@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RemoteControl</title>
+    <style>
+        body {
+            font-size: 40px;
+        }
+
+        button {
+            min-width: 300px;
+            min-height: 180px;
+            font-size: 50px;
+        }
+
+        input {
+            font-size: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>RemoteControl</h3>
+    <label>Status</label> <span>%s</span> <br>
+
+    <label>Delay</label>
+    <input id="time" type="number" value="7200">Seconds
+    <br>
+
+    <button onclick="action_open()">Open</button>
+    <button onclick="action_close()">Close</button>
+
+    <script>
+        function isRealNum(val) {
+            if (val === "" || val == null) {
+                return false;
+            }
+            if (!isNaN(val)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        function do_ajax(url) {
+            // url="http://192.168.4.1/"+url;
+            var ajax = new XMLHttpRequest();
+            ajax.open('get', url);
+            ajax.send();
+            // ajax.onreadystatechange = function () {
+            //     if (ajax.readyState == 4 && ajax.status == 200) {
+            //         console.log(ajax.responseText);//输入相应的内容
+            //     }
+            // }
+            location.reload()
+        }
+        function action_open() {
+            var time = document.getElementById('time').value;
+            console.log(time);
+            var url='light?on';
+            if(isRealNum(time)){
+                url+='=' + time;
+            }
+            do_ajax(url);
+        }
+
+        function action_close() {
+            do_ajax('light?off');
+        }
+
+    </script>
+</body>
+
+</html>

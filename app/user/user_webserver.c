@@ -5,13 +5,15 @@
 // #include "json/jsonparse.h"
 // #include "json/jsontree.h"
 #include "user_interface.h"
-#include "spi_flash.h"
-#include "sntp.h"
+// #include "spi_flash.h"
+// #include "sntp.h"
 
 #include "user_webserver.h"
 
 #include "sm_http_parse.h"
 #include "sm_debug.h"
+
+#include "request_handler.h"
 
 char* ICACHE_FLASH_ATTR stristr(const char* pString, const char* pFind)
 {
@@ -86,12 +88,6 @@ bool ICACHE_FLASH_ATTR check_data(char *precv, uint16 length)
     return true;
 }
 
-void load_file(int index){
-    char a[100]={0};
-    spi_flash_read(0x200000,&a,100);
-    os_printf("read flash 0x200000: %s \n",a);
-}
-
 void send_error(void *arg,int code,char *msg){
     // response
     sm_http_response_t *rsp;
@@ -109,7 +105,7 @@ void send_error(void *arg,int code,char *msg){
     }
     sm_build_http_response(rsp,buf);
     espconn_send(arg,aa,buf->last-buf->pos);
-    os_printf("build: %s\n\n",buf->pos);
+    // os_printf("build: %s\n\n",buf->pos);
     sm_free_buf(buf);
     sm_free_http_response(rsp);
     // sm_dump_system_state();
@@ -128,17 +124,30 @@ void send_error(void *arg,int code,char *msg){
  * /version 打印版本信息
  */ 
 
-void on_request(void *arg,sm_http_request_t *req){
-    if(req->method==SM_HTTP_GET){
-        if(os_strcmp(req->url,"/index.html")==0){
-            send_error(arg,200,"okay");
-        }else if(os_strcmp(req->url,"/now")==0){
-            send_error(arg,200,sntp_get_real_time(sntp_get_current_timestamp()));
-        }else{
-            send_error(arg,404,NULL);
-        }
-    }
-}
+// void on_request(void *arg,sm_http_request_t *req){
+//     if(req->method==SM_HTTP_GET){
+//         if(os_strcmp(req->url,"/index.html")==0){
+//             send_error(arg,200,"okay");
+//         }else if(os_strcmp(req->url,"/pure-min.css")==0){
+            
+//         }else if(os_strcmp(req->url,"/light?on")==0){
+//             light_on();
+//             light_off_delay(3);
+//             send_error(arg,200,"ok");
+//         }else if(os_strcmp(req->url,"/light?off")==0){
+//             light_off();
+//             send_error(arg,200,"ok");
+//         }else if(os_strcmp(req->url,"/light")==0){
+//             light_status();
+//             send_error(arg,200,"ok");
+
+//         }else if(os_strcmp(req->url,"/now")==0){
+//             send_error(arg,200,sntp_get_real_time(sntp_get_current_timestamp()));
+//         }else{
+//             send_error(arg,404,NULL);
+//         }
+//     }
+// }
 
 void ICACHE_FLASH_ATTR onConnected(void *arg)
 {
@@ -158,16 +167,16 @@ void ICACHE_FLASH_ATTR onReconnected(void *arg, sint8 err)
 
 void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
 {
-    uint32 current_timestamp;
-    current_timestamp=sntp_get_current_timestamp();
-    os_printf("time: %ld %s\n",current_timestamp,sntp_get_real_time(current_timestamp));
+    // uint32 current_timestamp;
+    // current_timestamp=sntp_get_current_timestamp();
+    // os_printf("time: %ld %s\n",current_timestamp,sntp_get_real_time(current_timestamp));
 
     if (!check_data(pdata, len))
     {
         os_printf("invalid request");
     }
 
-    os_printf("origin recv: %s\n\n", pdata);
+    // os_printf("origin recv: %s\n\n", pdata);
 
     sm_http_request_t *r;
     sm_buf_t *buf;
@@ -189,7 +198,6 @@ void ICACHE_FLASH_ATTR onRecv(void *arg, char *pdata, unsigned short len)
     // sm_dump_http_request(r);
     
     sm_free_http_request(r);
-    
     sm_dump_system_state();
 }
 void ICACHE_FLASH_ATTR onSent(void *arg)

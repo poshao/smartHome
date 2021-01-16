@@ -321,39 +321,41 @@ void sm_dump_http_request(sm_http_request_t *r)
     os_printf("=== dump http_request end   ===\n\n");
 }
 
-void sm_http_content_type_set(sm_http_response_t *r,sm_content_type_t tp){
-    if(!r) return;
+void sm_http_content_type_set(sm_http_response_t *r, sm_content_type_t tp)
+{
+    if (!r)
+        return;
 
-    char content_type[50]={0};
+    char content_type[50] = {0};
     switch (tp)
     {
     case SM_CONTENT_TYPE_HTML:
-        os_strcpy(content_type,"text/html");
+        os_strcpy(content_type, "text/html");
         break;
     case SM_CONTENT_TYPE_JSON:
-        os_strcpy(content_type,"application/json");
+        os_strcpy(content_type, "application/json");
         break;
     case SM_CONTENT_TYPE_JAVASCRIPT:
-        os_strcpy(content_type,"text/javascript");
+        os_strcpy(content_type, "text/javascript");
         break;
     case SM_CONTENT_TYPE_CSS:
-        os_strcpy(content_type,"text/css");
+        os_strcpy(content_type, "text/css");
         break;
     case SM_CONTENT_TYPE_X_FORM:
-        os_strcpy(content_type,"application/x-www-form-unlencoded");
+        os_strcpy(content_type, "application/x-www-form-unlencoded");
         break;
     default:
-        os_strcpy(content_type,"text/plain");
+        os_strcpy(content_type, "text/plain");
         break;
     }
-    sm_http_header_set(&r->headers,"Content-Type",content_type);
+    sm_http_header_set(&r->headers, "Content-Type", content_type);
 }
 
 sm_http_response_t *sm_init_http_response()
 {
     sm_http_response_t *r;
     r = os_zalloc(sizeof(sm_http_response_t));
-    r->code=200;
+    r->code = 200;
     return r;
 }
 
@@ -407,8 +409,8 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
 
     // if (r->bodylen > 0)
     // {
-        os_sprintf(line, "%d", r->bodylen);
-        sm_http_header_set(&r->headers, "Content-Length", line);
+    os_sprintf(line, "%d", r->bodylen);
+    sm_http_header_set(&r->headers, "Content-Length", line);
     // }
 
     p = buf->pos;
@@ -455,17 +457,19 @@ sm_return_t sm_build_http_response(sm_http_response_t *r, sm_buf_t *buf)
     // os_printf("\r\n");
 
     // send body
-    len = os_sprintf(line, "%s", r->body);
-    if (p + len < buf->last)
-    {
-        os_memcpy(p, line, len);
-        p += len;
-    }
-    else
-    {
-        return SM_NO_MEM;
-    }
-    buf->last=p;
+    // len = os_sprintf(line, "%s", r->body);
+    // len=r->bodylen;
+    if (r->bodylen)
+        if (p + r->bodylen < buf->last)
+        {
+            os_memcpy(p, r->body, r->bodylen);
+            p += r->bodylen;
+        }
+        else
+        {
+            return SM_NO_MEM;
+        }
+    buf->last = p;
     return SM_OK;
     // return out;
     // os_printf("%s",r->body);

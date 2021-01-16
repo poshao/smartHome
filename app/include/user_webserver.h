@@ -14,4 +14,6 @@ struct  http_response
 void startServer(void);
 void stopServer(void);
 
+void send_error(void *arg,int code,char *msg);
+
 #endif
